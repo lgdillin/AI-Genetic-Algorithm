@@ -154,11 +154,14 @@ class Controller implements MouseListener
 	public void mouseClicked(MouseEvent e) {    }
 
 	static void doBattle(IAgent blue, IAgent red) throws Exception {
+		int gameSpeed = 1;
+
+
 		Object ss = new Object();
 		Controller c = new Controller(ss, blue, red);
 		c.init();
 		c.view = new View(c, c.model, ss); // instantiates a JFrame, which spawns another thread to pump events and keeps the whole program running until the JFrame is closed
-		new Timer(20, c.view).start(); // creates an ActionEvent at regular intervals, which is handled by View.actionPerformed
+		new Timer(gameSpeed, c.view).start(); // creates an ActionEvent at regular intervals, which is handled by View.actionPerformed
 	}
 
 	static int doBattleNoGui(IAgent blue, IAgent red) throws Exception {
@@ -168,9 +171,9 @@ class Controller implements MouseListener
 		while(c.update()) { }
 		c.model.setPerspectiveBlue(c.secret_symbol);
 		if(c.model.getFlagEnergySelf() < 0.0f && c.model.getFlagEnergyOpponent() >= 0.0f)
-			return -1;
+			return -1 * (int)c.getIter();
 		else if(c.model.getFlagEnergyOpponent() < 0.0f && c.model.getFlagEnergySelf() >= 0.0f)
-			return 1;
+			return 1 * (int)c.getIter();
 		else
 			return 0;
 	}
