@@ -19,7 +19,7 @@ class Game
 		// Create a random initial population
 		Random r = new Random(123456);
 		Matrix population1 = new Matrix(100, 291);
-		Matrix population2 = population1;
+		Matrix population2 = new Matrix(100, 291);
 		initWeights(population1, r);
 		initWeights(population2, r);
 
@@ -53,6 +53,7 @@ class Game
 				// Both teams tie
 				mutate(population1, population2, r);
 			}
+			mutate(population1, population2, r);
 		}
 
 		// Return an arbitrary member from the population
