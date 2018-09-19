@@ -10,6 +10,7 @@ class Game {
 	// mutation chance
 	// fights per generation
   static int numChromosomes = 291 + 4;
+  static int numSubjects = 200;
 
   static void initWeights(Matrix m, Random r) {
     for(int i = 0; i < m.rows(); i++)
@@ -22,19 +23,19 @@ class Game {
 
   static double[] evolveWeights() throws Exception {
     Random r = new Random(123456);
-		Matrix population = new Matrix(100, numChromosomes);
-		for(int i = 0; i < 100; i++)
+		Matrix population = new Matrix(numSubjects, numChromosomes);
+		for(int i = 0; i < numSubjects; i++)
 		{
 			double[] subject = population.row(i);
 			for(int j = 0; j < numChromosomes - 4; j++)
 				subject[j] = 0.03 * r.nextGaussian();
 
       // Set deviation
-      subject[numChromosomes - 4] = 10.0;
+      subject[numChromosomes - 4] = 12.0 + r.nextGaussian();
       // Set winner survival rate
-      subject[numChromosomes - 3] = 0.9;
+      subject[numChromosomes - 3] = Math.max(0.7, Math.min(r.nextDouble(), 0.9));
       // mutation chance
-      subject[numChromosomes - 2] = 0.25f;
+      subject[numChromosomes - 2] = Math.max(0.25, Math.min(r.nextDouble(), 0.4));
       // fights per generation
       subject[numChromosomes - 1] = 10.0f; // Every subject starts with 1 fight
 		}
@@ -47,31 +48,15 @@ class Game {
     double[] chromosomes1 = new double[291];
     double[] chromosomes2 = new double[291];
 
-    double mutationChance = 0.25f;
-    double deviation = 10.0f;
-
-		int generations = 1000;
+		int generations = 1200;
 		for(int i = 0; i < generations; ++i) {
 
 			// Output progress
-			// if(i % 100 == 0) {
-			// 	System.out.println(Integer.toString(i));
-			// }
-
-
-			// Mutate population
-			for(int j = 0; j < population.rows(); ++j) {
-        double[] subject = population.row(j);
-
-				if(r.nextDouble() < mutationChance) { // 25% chance of mutating each row in population (make this meta-param)
-					//double deviation = subject[numChromosomes - 4]; // Some random deviation to help modify a chromosome
-
-					int k = r.nextInt(numChromosomes); // Pick a random element of the chromosome
-					subject[k] += r.nextGaussian() * deviation;
-				}
+			if(i % 100 == 0) {
+				System.out.println(Integer.toString(i));
 			}
-      deviation = (deviation * 0.99);
-      mutationChance = (mutationChance * 0.99);
+
+      double probability = r.nextDouble();
 
 			// Do a tournament
 			// Controller.doBattleNoGui(agent1, agent2);
@@ -88,51 +73,55 @@ class Game {
       //for(number of fights)
 			int result = Controller.doBattleNoGui(new NeuralAgent(chromosomes1), new NeuralAgent(chromosomes2));
          //kill loser
-			System.out.println(1.0f / result);
+			//System.out.println(1.0f / result);
 
 			// If the member wins, keep, otherwise, evolve
 			if(result < 0) {
-				//System.out.println("Challenger 1 wins, evolve Challenger 2");
-				// Crossover
-				double[] father = population.row(r.nextInt(100));
-				double[] mother = population.row(r.nextInt(100));
-				for(int k = 0; k < numChromosomes; ++k) {
-					challenger2[k] = (r.nextBoolean() ? father[k] : mother[k]);
-				}
-
+        if(r.nextDouble() < challenger2[numChromosomes - 3]) crossover(population, challenger2, r);
+        else crossover(population, challenger1, r);
 			} else if(result > 0){
-				//System.out.println("Challenger 2 wins, evolve Challenger 1");
-				// Crossover
-				double[] father = population.row(r.nextInt(100));
-				double[] mother = population.row(r.nextInt(100));
-				for(int k = 0; k < numChromosomes; ++k) {
-					challenger1[k] = (r.nextBoolean() ? father[k] : mother[k]);
-				}
+        if(r.nextDouble() < challenger1[numChromosomes - 3]) crossover(population, challenger1, r);
+        else crossover(population, challenger2, r);
+			} else { // Kill a random one
+        if(r.nextBoolean()) crossover(population, challenger2, r);
+        else crossover(population, challenger1, r);
+			}
 
-				} else {
-					//System.out.println("Tie!");
-          if(r.nextBoolean()) {
-            double[] father = population.row(r.nextInt(100));
-            double[] mother = population.row(r.nextInt(100));
-            for(int k = 0; k < numChromosomes; ++k) {
-              challenger1[k] = (r.nextBoolean() ? father[k] : mother[k]);
-            }
-          } else {
-            double[] father = population.row(r.nextInt(100));
-            double[] mother = population.row(r.nextInt(100));
-            for(int k = 0; k < numChromosomes; ++k) {
-              challenger2[k] = (r.nextBoolean() ? father[k] : mother[k]);
-            }
-          }
+      // Mutate population
+      for(int j = 0; j < population.rows(); ++j) {
+        double[] subject = population.row(j);
 
-				}
+        if(r.nextDouble() < subject[numChromosomes - 2]) { // 25% chance of mutating each row in population (make this meta-param)
+          //double deviation = subject[numChromosomes - 4]; // Some random deviation to help modify a chromosome
+
+          int k = r.nextInt(numChromosomes); // Pick a random element of the chromosome
+          subject[k] += subject[numChromosomes - 4];
+        }
+      }
 
 
 		}
 
 		// Return an arbitrary member from the population
     System.out.println("Training finished");
-		return population.row(0);
+		return population.row(r.nextInt(numSubjects));
+  }
+
+  static void crossover(Matrix population, double[] victim, Random r) {
+    double[] father = population.row(r.nextInt(numSubjects));
+    double[] mother = population.row(r.nextInt(numSubjects));
+    int crossoverLevel = r.nextInt(numChromosomes);
+    if(r.nextBoolean()) {
+      System.arraycopy(father, 0, victim, 0, crossoverLevel);
+      System.arraycopy(mother, crossoverLevel + 1, victim, crossoverLevel + 1, numChromosomes - crossoverLevel - 1);
+    } else {
+      System.arraycopy(mother, 0, victim, 0, crossoverLevel);
+      System.arraycopy(father, crossoverLevel + 1, victim, crossoverLevel + 1, numChromosomes - crossoverLevel - 1);
+    }
+  }
+
+  static void mutate() {
+
   }
 
   public static void main(String[] args) throws Exception
