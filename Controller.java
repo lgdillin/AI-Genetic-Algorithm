@@ -174,7 +174,7 @@ class Controller implements MouseListener
 		if(c.model.getFlagEnergySelf() < 0.0f && c.model.getFlagEnergyOpponent() >= 0.0f)
 			return -1 * (int)c.getIter();
 		else if(c.model.getFlagEnergyOpponent() < 0.0f && c.model.getFlagEnergySelf() >= 0.0f)
-			return 1 * (int)c.getIter();
+			return (int)c.getIter();
 		else
 			return 0;
 	}
