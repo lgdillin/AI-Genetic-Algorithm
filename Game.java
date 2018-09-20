@@ -40,17 +40,13 @@ class Game {
        // Every subject starts with 1 fight
 		}
 
-    double[] subject1 = population.row(0);
-    for(int i = 0; i < numChromosomes; ++i) {
-      System.out.print(subject1[i]);
-    }System.out.println();
 
     double[] chromosomes1 = new double[291];
     double[] chromosomes2 = new double[291];
     double[] fitnessTest = new double[291];
 
     int maxFitness = 0; // The most fit speciment after all training;
-		int generations = 500;
+		int generations = 1000;
 		for(int i = 0; i < generations; ++i) {
 
 			// Output progress
@@ -76,6 +72,7 @@ class Game {
         int result = Controller.doBattleNoGui(new NeuralAgent(chromosomes1), new NeuralAgent(chromosomes2));
            //kill loser
         //System.out.println(1.0f / result);
+        System.out.println(result);
 
         // If the member wins, keep, otherwise, evolve
         if(result < 0) {
@@ -87,12 +84,17 @@ class Game {
         } else { // Kill a random one
           //if(r.nextBoolean()) crossover(population, challenger2, r);
           //else crossover(population, challenger1, r);
-          float result1 = 1.0f / Controller.doBattleNoGui(new ReflexAgent(), new NeuralAgent(chromosomes1));
-          float result2 = 1.0f / Controller.doBattleNoGui(new ReflexAgent(), new NeuralAgent(chromosomes2));
-          if(result1 <= 0) crossover(population, challenger1, maxFitness, r);
-          if(result2 <= 0) crossover(population, challenger2, maxFitness, r);
-          if(result1 > result2) crossover(population, challenger2, maxFitness, r);
-          else crossover(population, challenger1, maxFitness, r);
+
+          crossover(population, challenger1, maxFitness, r);
+          crossover(population, challenger2, maxFitness, r);
+
+          // float result1 = 1.0f / Controller.doBattleNoGui(new ReflexAgent(), new NeuralAgent(chromosomes1));
+          // float result2 = 1.0f / Controller.doBattleNoGui(new ReflexAgent(), new NeuralAgent(chromosomes2));
+          // if(result1 <= 0) crossover(population, challenger1, maxFitness, r);
+          // if(result2 <= 0) crossover(population, challenger2, maxFitness, r);
+          // if(result1 > result2) crossover(population, challenger2, maxFitness, r);
+          // else crossover(population, challenger1, maxFitness, r);
+
         }
       }
 
@@ -117,16 +119,14 @@ class Game {
       for(int j = 1; j < population.rows(); ++j) {
         System.arraycopy(population.row(j), 0, fitnessTest, 0, 291);
         fitness = Controller.doBattleNoGui(new ReflexAgent(), new NeuralAgent(fitnessTest));
+        //System.out.println(fitness);
+
         if(fitness <= 0) continue;
         else fitness = 1.0f / fitness;
-
-        // System.out.println("Current: " + fitness);
 
         if(fitness > maxFitnessScore) {
           maxFitnessScore = fitness;
           maxFitness = j;
-          System.out.println(maxFitness);
-          System.out.println("new: " + (maxFitnessScore));
         }
       }
       System.out.println(maxFitnessScore);
