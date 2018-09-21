@@ -10,7 +10,7 @@ class Game {
 	// mutation chance
 	// fights per generation
   static int numChromosomes = 291 + 3;
-  static int numSubjects = 100;
+  static int numSubjects = 30;
   static int numFights = 3;
 
   static void initWeights(Matrix m, Random r) {
@@ -23,7 +23,7 @@ class Game {
   }
 
   static double[] evolveWeights() throws Exception {
-    Random r = new Random();
+    Random r = new Random(123);
 		Matrix population = new Matrix(numSubjects, numChromosomes);
 		for(int i = 0; i < numSubjects; i++)
 		{
@@ -32,11 +32,11 @@ class Game {
 				subject[j] = 0.03 * r.nextGaussian();
 
       // Set deviation
-      subject[numChromosomes - 3] = 1.3;
+      subject[numChromosomes - 3] = 1.7;
       // Set winner survival rate
-      subject[numChromosomes - 2] = 0.99;//Math.max(0.7, Math.min(r.nextDouble(), 0.9));
+      subject[numChromosomes - 2] = 0.8;//Math.max(0.7, Math.min(r.nextDouble(), 0.9));
       // mutation chance
-      subject[numChromosomes - 1] = 0.8;//Math.max(0.4, Math.min(r.nextDouble(), 0.8));
+      subject[numChromosomes - 1] = 0.75;//Math.max(0.4, Math.min(r.nextDouble(), 0.8));
        // Every subject starts with 1 fight
 		}
 
@@ -46,12 +46,12 @@ class Game {
     double[] fitnessTest = new double[291];
 
     int maxFitness = 0; // The most fit speciment after all training;
-		int generations = 1000;
+		int generations = 8000;
 		for(int i = 0; i < generations; ++i) {
 
 			// Output progress
 			if(i % 100 == 0) {
-				//System.out.println(Integer.toString(i));
+				System.out.println(Integer.toString(i));
 			}
 
       // Do 10 fights per generation
@@ -72,7 +72,7 @@ class Game {
         int result = Controller.doBattleNoGui(new NeuralAgent(chromosomes1), new NeuralAgent(chromosomes2));
            //kill loser
         //System.out.println(1.0f / result);
-        System.out.println(result);
+        //System.out.println(result);
 
         // If the member wins, keep, otherwise, evolve
         if(result < 0) {
@@ -111,26 +111,28 @@ class Game {
       }
 
       // Pick the most fit
-      System.arraycopy(population.row(maxFitness), 0, fitnessTest, 0, 291);
-      double fitness = Controller.doBattleNoGui(new ReflexAgent(), new NeuralAgent(fitnessTest));
-      if(fitness <= 0) fitness = 0;
-      else fitness = 1.0f / fitness;
-      double maxFitnessScore = fitness;
-      for(int j = 1; j < population.rows(); ++j) {
-        System.arraycopy(population.row(j), 0, fitnessTest, 0, 291);
-        fitness = Controller.doBattleNoGui(new ReflexAgent(), new NeuralAgent(fitnessTest));
-        //System.out.println(fitness);
 
-        if(fitness <= 0) continue;
-        else fitness = 1.0f / fitness;
-
-        if(fitness > maxFitnessScore) {
-          maxFitnessScore = fitness;
-          maxFitness = j;
-        }
-      }
-      System.out.println(maxFitnessScore);
 		}
+
+    System.arraycopy(population.row(maxFitness), 0, fitnessTest, 0, 291);
+    double fitness = Controller.doBattleNoGui(new ReflexAgent(), new NeuralAgent(fitnessTest));
+    if(fitness <= 0) fitness = 0;
+    else fitness = 1.0f / fitness;
+    double maxFitnessScore = fitness;
+    for(int j = 1; j < population.rows(); ++j) {
+      System.arraycopy(population.row(j), 0, fitnessTest, 0, 291);
+      fitness = Controller.doBattleNoGui(new ReflexAgent(), new NeuralAgent(fitnessTest));
+      //System.out.println(fitness);
+
+      if(fitness <= 0) continue;
+      else fitness = 1.0f / fitness;
+
+      if(fitness > maxFitnessScore) {
+        maxFitnessScore = fitness;
+        maxFitness = j;
+      }
+    }
+    System.out.println(maxFitnessScore);
 
 		// Return an arbitrary member from the population
     System.out.println("Training finished");
